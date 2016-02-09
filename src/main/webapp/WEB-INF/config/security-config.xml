@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<import resource="classpath:jpaContext.xml"/>
+	
+	<!--  LDAP<security:ldap-server ldif="classpath:users.ldif"/> -->
+	
+	<security:http auto-config="true" use-expressions="true">
+		<security:intercept-url pattern="/login.html" access="permitAll" requires-channel="https"/>
+		<security:intercept-url pattern="/loginFailed.html" access="permitAll" requires-channel="https"/>
+		<security:intercept-url pattern="/logout.html" access="permitAll" requires-channel="https"/>
+		<security:intercept-url pattern="/403.html" access="permitAll" requires-channel="https"/>
+		<security:intercept-url pattern="/**" access="hasRole('ROLE_USER')" requires-channel="https"/>
+		<security:form-login login-page="/login.html" authentication-failure-url="/loginFailed.html" />
+		<security:logout logout-success-url="/logout.html" />
+		<security:access-denied-handler error-page="/403.html"/>
+	</security:http>
+	
+	<!--  DB Users -->
+	<security:authentication-manager>
+		<security:authentication-provider user-service-ref="userDetailsService">
+			<security:password-encoder hash="bcrypt"></security:password-encoder>
+		</security:authentication-provider>
+	</security:authentication-manager>
+	
+	
+	<!--  LDAP AUTH 
+	<security:authentication-manager>
+		<security:ldap-authentication-provider
+			group-search-filter="member={0}"
+			group-search-base="ou=Users,ou=Internal,o=ericsson"
+			user-search-base="(&(cn=${0})(|(ericountry=Romania)(ericountry=Spain)(ericountry=France)(ericountry=Sweden)(ericountry=Finland)(ericountry=United Kingdom)))" 
+			user-dn-pattern="uid=${0},ou=users,ou=internal,o=ericsson"
+			/>
+	</security:authentication-manager>
+	-->
+	
+	<bean id="userDetailsService" class="org.springframework.security.core.userdetails.jdbc.JdbcDaoImpl">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+		
+	
+</beans>
